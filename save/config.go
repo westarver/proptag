@@ -43,5 +43,3 @@ func prepArgs() (*boa.CLI, ActionType) {
 
 	return cli, action
 }
-
-

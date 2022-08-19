@@ -11,6 +11,7 @@ import (
 	"github.com/westarver/boa"
 	"github.com/westarver/helper"
 	msg "github.com/westarver/messenger"
+	trace "github.com/westarver/tracer"
 )
 
 type ActionType int
@@ -46,6 +47,10 @@ const (
 //─────────────┤ Run ├─────────────
 
 func Run(m *msg.Messenger) int {
+	var trace = trace.New(os.Stderr)                               //<rmv/>
+	trace.Trace("----------------------------entering Run\n")      //<rmv/>
+	defer trace.Trace("----------------------------leaving Run\n") //<rmv/>
+
 	cli, action := prepArgs()
 	var err error
 	var ins, outs []string
@@ -75,6 +80,7 @@ func Run(m *msg.Messenger) int {
 	} else {
 		ins = append(ins, "-")
 	}
+	trace.Trace("ins ", ins) //<rmv/>
 	o, b2 := cli.Items["--out"].(boa.CmdLineItem[[]string])
 	if b2 {
 		outs = o.Value()
@@ -84,19 +90,27 @@ func Run(m *msg.Messenger) int {
 	} else {
 		outs = append(outs, "-")
 	}
+	trace.Trace("outs ", outs) //<rmv/>
 
 	err = performCommand(action, ins, outs)
+	trace.Trace("error returned from performCommand ", err) //<rmv/>
 	if m.Catch(msg.LOG, err) != nil {
 		action = actionError
 	}
 
+	m.InfoMsg(m.Logout(), msg.MESSAGE, "Exiting with exit code %d", int(action))
 	return int(action)
 }
 
 //─────────────┤ performCommand ├─────────────
 
 func performCommand(act ActionType, ins, outs []string) error {
+	var trace = trace.New(os.Stderr)                                          //<rmv/>
+	trace.Trace("----------------------------entering performCommand\n")      //<rmv/>
+	defer trace.Trace("----------------------------leaving performCommand\n") //<rmv/>
+
 	matched := helper.Matchio(ins, outs, ".prop")
+	trace.Trace("matched ", matched) //<rmv/>
 	var err error
 	for _, m := range matched {
 		err = process(act, m.In, m.Out)
@@ -107,13 +121,18 @@ func performCommand(act ActionType, ins, outs []string) error {
 //─────────────┤ process ├─────────────
 
 func process(act ActionType, in string, o string) error {
+	var trace = trace.New(os.Stderr)                                   //<rmv/>
+	trace.Trace("----------------------------entering process\n")      //<rmv/>
+	defer trace.Trace("----------------------------leaving process\n") //<rmv/>
 	var stdin, stdout, piping bool
 	var inp []byte
 	var err error
 
+	trace.Trace("in ", in) //<rmv/>
 	if in == "-" {
 		stdin = true
 	}
+	trace.Trace("out ", o) //<rmv/>
 	if o == "-" {
 		stdout = true
 	}
@@ -126,6 +145,7 @@ func process(act ActionType, in string, o string) error {
 		} else {
 			piping = true
 		}
+		trace.Trace("piping ", piping) //<rmv/>
 		if piping {
 			var data bytes.Buffer
 			scanner := bufio.NewScanner(os.Stdin)
@@ -155,6 +175,7 @@ func process(act ActionType, in string, o string) error {
 			return err
 		}
 		f, err := os.Open(in)
+		trace.Trace("error ", err) //<rmv/>
 		if err != nil {
 			return err
 		}
@@ -181,6 +202,7 @@ func process(act ActionType, in string, o string) error {
 	var prop *os.File
 	if !stdout {
 		o, err = helper.ValidatePath(o)
+		trace.Trace("error ", err) //<rmv/>
 		if err != nil {
 			return err
 		}

@@ -679,5 +679,3 @@ func splitType(line string) string {
 	tparam := strings.Split(typ[i:j], " ")
 	return t + tparam[0] + "]"
 }
-
-

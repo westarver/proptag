@@ -57,6 +57,6 @@ import (
 func main() {
 	writer := msg.New()
 	writer.SetLogoutStr()
-
-	os.Exit(proptag.Run(writer))
+	exitCode := proptag.Run(writer)
+	os.Exit(exitCode)
 }

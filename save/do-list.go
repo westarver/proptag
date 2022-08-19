@@ -117,5 +117,3 @@ func doList(in []byte, file ...string) error {
 	fmt.Fprintln(os.Stdout, "")
 	return nil
 }
-
-
